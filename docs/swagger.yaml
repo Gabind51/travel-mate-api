@@ -1,0 +1,174 @@
+definitions:
+  models.Register:
+    properties:
+      email:
+        example: jean@example.com
+        type: string
+      name:
+        example: Jean Dupont
+        type: string
+      password:
+        example: secret123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  models.RegisterResponse:
+    properties:
+      message:
+        example: Inscription réussie
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  models.Trip:
+    properties:
+      description:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: integer
+      location:
+        type: string
+      startDate:
+        type: string
+      title:
+        type: string
+      userId:
+        description: Pour lier à un utilisateur plus tard
+        type: integer
+    required:
+    - title
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      isAdmin:
+        type: boolean
+      name:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+info:
+  contact: {}
+paths:
+  /login:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Permet à un utilisateur de s'authentifier
+      parameters:
+      - description: Email
+        in: formData
+        name: email
+        required: true
+        type: string
+      - description: Mot de passe
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RegisterResponse'
+            type: array
+      summary: Authentification d'un utilisateur
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Permet à un utilisateur de créer un compte
+      parameters:
+      - description: Nom de l'utilisateur
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/models.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RegisterResponse'
+            type: array
+      summary: Création d'un utilisateur
+      tags:
+      - auth
+  /trips:
+    get:
+      description: Retourne tous les voyages enregistrés
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Trip'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Liste tous les voyages
+      tags:
+      - trips
+  /user:
+    get:
+      description: Retourne tous les utilisateurs enregistrés
+      parameters:
+      - description: Email de l'utilisateur
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Liste un utilisateur en fonction de son email
+      tags:
+      - users
+  /users:
+    get:
+      description: Retourne tous les utilisateurs enregistrés
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Liste tous les utilisateurs
+      tags:
+      - users
+swagger: "2.0"
