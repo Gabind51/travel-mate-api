@@ -3,49 +3,44 @@ package middleware
 import (
 	"net/http"
 	"strings"
-	"fmt"
-	"travelmate-api/models"
-	"travelmate-api/database"
+
+	"travelmate-api/utils"
 
 	"github.com/gin-gonic/gin"
-	"travelmate-api/utils"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-var SecretKey = []byte("my_very_secret_key")
+var SecretKey = []byte("JWT_SECRET")
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token manquant ou invalide"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token manquant ou invalide"})
+			return
+		}
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		claims, err := utils.ParseToken(token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token invalide"})
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("méthode de signature inattendue : %v", token.Header["alg"])
-			}
-			return SecretKey, nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token invalide"})
-			c.Abort()
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
+		userIDFloat, ok := claims["user_id"].(float64)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token invalide (claims)"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Identifiant utilisateur manquant"})
 			return
 		}
+		userID := uint(userIDFloat)
 
-		c.Set("user", claims)
+		isAdmin, ok := claims["is_admin"].(bool)
+		if !ok {
+			isAdmin = false
+		}
+
+		c.Set("user_id", userID)
+		c.Set("is_admin", isAdmin)
+
 		c.Next()
 	}
 }
@@ -59,22 +54,27 @@ func IsAdmin() gin.HandlerFunc {
 		}
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
-		userID, err := utils.ParseToken(token)
+		claims, err := utils.ParseToken(token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token invalide"})
 			return
 		}
 
-		var user models.User
-		if err := database.DB.First(&user, userID).Error; err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur introuvable"})
+		userIDFloat, ok := claims["user_id"].(float64)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "L'identifiant de l'utilisateur est manquant dans le token"})
+			return
+		}
+		userID := uint(userIDFloat)
+
+		isAdmin, ok := claims["is_admin"].(bool)
+		if !ok || !isAdmin {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Accès réservé aux administrateurs"})
 			return
 		}
 
-		if !user.IsAdmin {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Accès réservé aux admins"})
-			return
-		}
+		c.Set("user_id", userID)
+		c.Set("is_admin", isAdmin)
 
 		c.Next()
 	}

@@ -3,9 +3,10 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"travelmate-api/database"
 	"travelmate-api/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 // GetTrips godoc
@@ -33,6 +34,18 @@ func GetTripByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, trip)
+}
+
+func GetTripsByUserID(c *gin.Context) {
+	id := c.Param("id")
+
+	var trips []models.Trip
+	if err := database.DB.Where("user_id = ?", id).Find(&trips).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la récupération des voyages"})
+		return
+	}
+
+	c.JSON(http.StatusOK, trips)
 }
 
 func CreateTrip(c *gin.Context) {
@@ -119,3 +132,18 @@ func DeleteMultipleTrips(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Suppression effectuée"})
 }
 
+func SearchTrips(c *gin.Context) {
+	location := c.Query("location")
+	if location == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error" : "Le paramètre 'location' est requis"})
+		return
+	}
+
+	var trips []models.Trip
+	if err := database.DB.Where("location LIKE ?", "%"+location+"%").Find(&trips).Error; err!= nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la recherche"})
+		return
+	}
+
+	c.JSON(http.StatusOK, trips)
+}

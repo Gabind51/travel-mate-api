@@ -1,23 +1,34 @@
 package controllers
 
 import (
-	"net/http"
+	"os"
+
 	"travelmate-api/database"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ResetDatabase(c *gin.Context) {
-	// Supprimer toutes les données sauf l’admin
-	if err := database.DB.Exec("DELETE FROM trips").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur sur trips"})
-		return
+	if database.DB != nil {
+		sqlDB, err := database.DB.DB()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "impossible de récupérer la connexion SQL : " + err.Error()})
+			return
+		}
+		sqlDB.Close()
 	}
-	if err := database.DB.Exec("DELETE FROM users WHERE is_admin = false").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur sur users"})
-		return
-	}
-	// Ajouter d’autres tables ici si besoin (ex: activities, notes…)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Base de données réinitialisée"})
+	err := os.Remove("travelmate.db")
+	if err != nil && !os.IsNotExist(err) {
+		c.JSON(500, gin.H{"error": "Erreur lors de la suppression de la base : " + err.Error()})
+		return
+	}
+
+	err = database.InitDB()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Erreur lors de l'initialisation de la base : " + err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Base de données réinitialisée avec succès"})
 }

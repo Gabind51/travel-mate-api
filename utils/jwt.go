@@ -1,39 +1,50 @@
 package utils
 
 import (
-	"time"
+	"fmt"
 	"os"
+	"time"
+
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var jwtKey = []byte(getJWTSecret())
 
-func getJWTSecret() string {
+func HashPassword(password string) (string, error) {
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+    return string(bytes), err
+}
+
+func getJWTSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		return "my_very_secret_key" // fallback
+		secret = "my_very_secret_key" 
 	}
-	return secret
+	return []byte(secret)
 }
 
 func GenerateJWT(userID uint, isAdmin bool) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-        "user_id": userID,
+		"user_id":  userID,
 		"is_admin": isAdmin,
-        "exp":     time.Now().Add(time.Hour * 24).Unix(), // expiration dans 24h
-    })
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+	})
 
 	tokenString, err := token.SignedString(getJWTSecret())
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
-    return tokenString, nil
+	return tokenString, nil
 }
 
-func ParseToken(tokenStr string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+func ParseToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return getJWTSecret(), nil
 	})
 
 	if err != nil || !token.Valid {

@@ -2,15 +2,13 @@ package controllers
 
 import (
 	"net/http"
-	"log"
-	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"travelmate-api/database"
+	"travelmate-api/models"
+	"travelmate-api/utils"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-	"travelmate-api/models"
-	"travelmate-api/database"
-	"travelmate-api/utils"
 )
 
 var jwtKey = []byte("your_secret_key")
@@ -64,12 +62,8 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Génération du token JWT
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(72 * time.Hour).Unix(),
-	})
-	tokenString, err := token.SignedString(jwtKey)
+	// Génération du token JWT via ta fonction GenerateJWT
+	tokenString, err := utils.GenerateJWT(user.ID, user.IsAdmin)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la génération du token"})
 		return
@@ -110,9 +104,6 @@ func Login(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		if err != nil {
-			log.Fatal(err)
-		}
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Mot de passe incorrect"})
 		return
 	}

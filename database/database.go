@@ -3,31 +3,28 @@ package database
 import (
 	"log"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"travelmate-api/models"
-	"golang.org/x/crypto/bcrypt"
+	"travelmate-api/utils"
+
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func InitDB() {
+func InitDB() error {
 	var err error
-
-	// Ouvre une BDD SQLite dans un fichier local
 	DB, err = gorm.Open(sqlite.Open("travelmate.db"), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Erreur de connexion à la base de données :", err)
+		return err
 	}
 
-	// Migration automatique des modèles
-	err = DB.AutoMigrate(&models.User{}, &models.Trip{})
-	if err != nil {
-		log.Fatal("Erreur lors de la migration :", err)
-	}
-
-	// Création de l'utilisateur admin s'il n'existe pas
+	DB.AutoMigrate(&models.User{}, models.Trip{})
 	createDefaultAdmin()
+
+	log.Println("db init")
+
+	return nil
 }
 
 func createDefaultAdmin() {
@@ -35,23 +32,16 @@ func createDefaultAdmin() {
 	DB.Model(&models.User{}).Where("email = ?", "admin@travelmate.com").Count(&count)
 
 	if count == 0 {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-		if err != nil {
-			log.Println("Erreur lors du hash du mot de passe admin :", err)
-			return
-		}
-
+		hashedPassword, _ := utils.HashPassword("admin123456")
 		admin := models.User{
 			Name:     "Admin",
 			Email:    "admin@travelmate.com",
-			Password: string(hashedPassword),
+			Password: hashedPassword,
 			IsAdmin:  true,
 		}
 
-		if err := DB.Create(&admin).Error; err != nil {
-			log.Println("Erreur lors de la création de l'admin :", err)
-		} else {
-			log.Println("Admin créé avec succès.")
-		}
+		DB.Create(&admin)
+		log.Println("Admin créé avec succès.")
 	}
 }
+

@@ -1,9 +1,10 @@
 package routes
 
 import (
-    "github.com/gin-gonic/gin"
-    "travelmate-api/controllers"
-    "travelmate-api/middleware"
+	"travelmate-api/controllers"
+	"travelmate-api/middleware"
+
+	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -27,6 +28,8 @@ func SetupRoutes(r *gin.Engine) {
 	// Users
 	protected.GET("/users", controllers.GetUsers)
 	protected.GET("/user", controllers.GetUsersByEmail)
+    protected.PUT("/users/:id", controllers.UpdateUser)
+    protected.GET("/users/:id/trips", controllers.GetTripsByUserID)
 
     // Trips
     tripGroup := protected.Group("/trips")
@@ -38,6 +41,7 @@ func SetupRoutes(r *gin.Engine) {
 		tripGroup.PUT("/", controllers.UpdateMultipleTrips)
 		tripGroup.DELETE("/:id", controllers.DeleteTrip)
 		tripGroup.DELETE("", controllers.DeleteMultipleTrips)
+		tripGroup.GET("/search", controllers.SearchTrips)
     }
 
     // Admin
