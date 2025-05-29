@@ -102,12 +102,38 @@ func UpdateMultipleTrips(c *gin.Context) {
 
 func DeleteTrip(c *gin.Context) {
 	id := c.Param("id")
-	if err := database.DB.Delete(&models.Trip{}, id).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur suppression"})
+
+	// Récupère le voyage
+	var trip models.Trip
+	if err := database.DB.First(&trip, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Voyage introuvable"})
 		return
 	}
-	c.Status(http.StatusNoContent)
+
+	// Récupère l'utilisateur connecté
+	currentUserID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Utilisateur non authentifié"})
+		return
+	}
+
+	isAdmin, _ := c.Get("is_admin")
+
+	// Vérifie si l'utilisateur est propriétaire ou admin
+	if trip.UserID != currentUserID.(uint) && !isAdmin.(bool) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Accès refusé : vous ne pouvez pas supprimer ce voyage"})
+		return
+	}
+
+	// Supprime le voyage
+	if err := database.DB.Delete(&trip).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la suppression"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Le voyage a bien été supprimé"})
 }
+
 
 func DeleteMultipleTrips(c *gin.Context) {
 	var payload struct {

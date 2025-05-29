@@ -1,0 +1,1 @@
+ERROR: 2025/05/29 15:48:10 logger.go:35: HTTP ERROR: DELETE /trips/1 | 404 | 999.6µs | user_id=1 is_admin=true

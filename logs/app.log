@@ -1,0 +1,4 @@
+INFO: 2025/05/29 15:40:39 logger.go:30: GET /users | 200 | 0s | user_id=1 is_admin=true | IP=::1
+INFO: 2025/05/29 15:40:50 logger.go:30: GET /trips/1 | 404 | 664.8µs | user_id=1 is_admin=true | IP=::1
+INFO: 2025/05/29 15:47:59 logger.go:37: HTTP: GET /users | 200 | 531.4µs | user_id=1 is_admin=true
+INFO: 2025/05/29 15:48:51 logger.go:37: HTTP: POST /trips | 201 | 6.4278ms | user_id=1 is_admin=true

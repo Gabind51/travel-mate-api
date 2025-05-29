@@ -15,7 +15,7 @@ import (
 func SetupRoutes(r *gin.Engine) {
     // Swagger
     r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+    
     // Auth
     r.POST("/login", controllers.Login)
     r.POST("/register", controllers.Register)
@@ -23,6 +23,7 @@ func SetupRoutes(r *gin.Engine) {
     // Utilisation du middlewate sur l'ensemble des routes
     protected := r.Group("/")
 	protected.Use(middleware.AuthMiddleware())
+    protected.Use(middleware.RequestLogger())
     protected.GET("/me", controllers.GetMe)
 
 	// Users

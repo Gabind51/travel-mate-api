@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 	"travelmate-api/database"
+	"travelmate-api/logger"
 	"travelmate-api/routes"
 
 	"github.com/gin-contrib/cors"
@@ -15,16 +16,21 @@ import (
 )
 
 func main() {
+	// On initialise le logger
+	logger.InitLogger()
+	// On charge les secrets
     err := godotenv.Load()
     if err != nil {
         log.Println("Pas de .env détecté")
     }
 
+	// On créé la BDD
+
     database.InitDB()
     r := gin.Default()
 
     r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // ← Flutter Web ou autre front
+		AllowOrigins:     []string{"*"}, 
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -33,5 +39,5 @@ func main() {
 	}))
 
     routes.SetupRoutes(r)
-    r.Run("0.0.0.0:8080") // Lancer sur localhost:8080
+    r.Run("0.0.0.0:8080")
 }

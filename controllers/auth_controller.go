@@ -63,7 +63,7 @@ func Register(c *gin.Context) {
 	}
 
 	// Génération du token JWT via ta fonction GenerateJWT
-	tokenString, err := utils.GenerateJWT(user.ID, user.IsAdmin)
+	tokenString, err := utils.GenerateJWT(user.ID, user.Name , user.IsAdmin)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la génération du token"})
 		return
@@ -108,6 +108,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, _ := utils.GenerateJWT(user.ID, user.IsAdmin)
+	token, _ := utils.GenerateJWT(user.ID, user.Name, user.IsAdmin)
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }

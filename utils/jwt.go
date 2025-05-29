@@ -24,9 +24,10 @@ func getJWTSecret() []byte {
 	return []byte(secret)
 }
 
-func GenerateJWT(userID uint, isAdmin bool) (string, error) {
+func GenerateJWT(userID uint, userName string, isAdmin bool) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  userID,
+		"user_name":  userName,
 		"is_admin": isAdmin,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
