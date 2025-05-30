@@ -6,7 +6,7 @@
 | Lister tout                                                                 | Users/GetAll         | Oui       |
 | Lister tout                                                                 | Users/GetAll         | Oui       |
 | Afficher un élément par ID                                                  | Trips/Get trip by ID | Oui       |
-| Lister via une recherche sur tous les champs                                |                      |
+| Lister via une recherche sur tous les champs                                |                      | Oui       |
 | Créer                                                                       | Trips/Create trip    | Oui       |
 | Mettre à jour un élément par son ID                                         | Trips/Update trip    | Oui       |
 | Supprimer un élément par son ID                                             | Trips/Delete trip    | Oui       |
@@ -25,3 +25,4 @@
 | Gestion des erreurs et validation des données                               |                      | Oui       |
 | Logging des évenements                                                      |                      | Oui       |
 | Déploiement sur un hébergeur gratuit                                        |                      |
+| **Note**                                                                    |                      | 17        |

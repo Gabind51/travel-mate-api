@@ -67,7 +67,15 @@ func GetUsersByEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-
+// UpdateUser godoc
+// @Summary Mise à jour d'un utilisateur
+// @Description Met à jour un utilisateur
+// @Tags users
+// @Produce json
+// @Param id path string true "Identifiant de l'utilisateur"
+// @Success 200 {array} models.User
+// @Router /users [PUT]
+// @Security BearerAuth
 func UpdateUser(c *gin.Context) {
 	// On récupère le paramètre envoyé dans la requête
 	idParam := c.Param("id")

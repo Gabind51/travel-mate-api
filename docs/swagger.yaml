@@ -33,14 +33,19 @@ definitions:
         type: string
       id:
         type: integer
+      latitude:
+        type: number
       location:
+        type: string
+      longitude:
+        type: number
+      notes:
         type: string
       startDate:
         type: string
       title:
         type: string
       userId:
-        description: Pour lier à un utilisateur plus tard
         type: integer
     required:
     - title
@@ -131,6 +136,262 @@ paths:
       summary: Liste tous les voyages
       tags:
       - trips
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau voyage avec les informations fournies
+      parameters:
+      - description: Données du voyage
+        in: body
+        name: trip
+        required: true
+        schema:
+          $ref: '#/definitions/models.Trip'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Trip'
+        "400":
+          description: Format invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur de création
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Créer un voyage
+      tags:
+      - Trips
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les champs spécifiés pour une liste de voyages
+      parameters:
+      - description: Liste des IDs et des champs à mettre à jour
+        in: body
+        name: update
+        required: true
+        schema:
+          properties:
+            ids:
+              items:
+                type: integer
+              type: array
+            update:
+              additionalProperties: true
+              type: object
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mise à jour effectuée
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Format invalide ou données manquantes
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la mise à jour
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mettre à jour plusieurs voyages
+      tags:
+      - Trips
+  /trips/{id}:
+    delete:
+      description: Supprime un voyage par son ID si l'utilisateur est le propriétaire
+        ou un administrateur
+      parameters:
+      - description: ID du voyage à supprimer
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Le voyage a bien été supprimé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Requête invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Utilisateur non authentifié
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Accès refusé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Voyage introuvable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur serveur lors de la suppression
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Supprimer un voyage
+      tags:
+      - Trips
+    get:
+      description: Retourne les détails d’un voyage spécifique à partir de son ID
+      parameters:
+      - description: ID du voyage
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Trip'
+        "404":
+          description: Voyage non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Récupérer un voyage par son ID
+      tags:
+      - Trips
+    put:
+      consumes:
+      - application/json
+      description: Met à jour un voyage existant avec les nouvelles données fournies
+      parameters:
+      - description: ID du voyage
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Nouvelles données du voyage
+        in: body
+        name: trip
+        required: true
+        schema:
+          $ref: '#/definitions/models.Trip'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Trip'
+        "400":
+          description: Format invalide
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Voyage non trouvé
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mettre à jour un voyage
+      tags:
+      - Trips
+  /trips/search:
+    get:
+      consumes:
+      - application/json
+      description: Recherche les voyages dont un champ contient la sous-chaîne donnée
+        (titre, description, localisation, dates)
+      parameters:
+      - description: Terme de recherche (doit correspondre partiellement à un champ
+          du voyage)
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Trip'
+            type: array
+        "400":
+          description: Le paramètre 'query' est requis
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Erreur lors de la recherche
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Rechercher des voyages
+      tags:
+      - Trips
+  /trips/user/{id}:
+    get:
+      description: Retourne tous les voyages associés à un utilisateur donné
+      parameters:
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Trip'
+            type: array
+        "500":
+          description: Erreur lors de la récupération des voyages
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Récupérer les voyages d’un utilisateur
+      tags:
+      - Trips
   /user:
     get:
       description: Retourne tous les utilisateurs enregistrés
@@ -169,6 +430,28 @@ paths:
       security:
       - BearerAuth: []
       summary: Liste tous les utilisateurs
+      tags:
+      - users
+    put:
+      description: Met à jour un utilisateur
+      parameters:
+      - description: Identifiant de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Mise à jour d'un utilisateur
       tags:
       - users
 swagger: "2.0"
